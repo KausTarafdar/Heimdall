@@ -1,6 +1,6 @@
 import { FailedRequestModel } from "../models/failedRequest";
-import { sendAlert } from "./Alert";
-import { RedisService } from "./Redis";
+import emailQueue from "./Alert";
+import { RedisService } from "./RedisService";
 
 export default class Monitor {
 
@@ -18,12 +18,16 @@ export default class Monitor {
         const failedRequestDoc = await FailedRequestModel.create({ ip, reason });
 
         await failedRequestDoc.save()
+        this.redis.FailedRequestCounterIncrement()
 
         const previousFailedRequests = await this.getPreviousFailedRequest(ip)
-        console.log(previousFailedRequests)
 
         if (previousFailedRequests >= this.THRESHOLD){
-            sendAlert(ip).catch((err)=> {console.error("Error in sending email", err)})
+            // sendAlert(ip).catch((err)=> {console.error("Error in sending email", err)})
+            emailQueue.add({
+                "ip": ip,
+                "reason": reason
+            })
             console.log("Sent email")
             await this.redis.addIpAlertTime(ip)
         }
@@ -36,7 +40,6 @@ export default class Monitor {
 
         // For Email cool down period of 5 mins
         const lastAlertTime = await this.redis.getLastAlertForIp(ip) + 5 * 60 * 1000
-        console.log(lastAlertTime)
 
         if (lastAlertTime === -1 || currWindowStart >= lastAlertTime) {
             const failedCount = await FailedRequestModel.countDocuments({

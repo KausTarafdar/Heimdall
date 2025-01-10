@@ -20,8 +20,8 @@ export const config = {
     }
   },
   email_credentials: {
-    from_email: "kaustarafdar@gmail.com",
-    to_email: "kinipe3550@wirelay.com"
+    from_email: "dranzerstar@gmail.com",
+    to_email: "tataf92710@suggets.com"
   },
   server: {
     port: process.env.PORT || 3000

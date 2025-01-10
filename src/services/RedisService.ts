@@ -39,14 +39,4 @@ export class RedisService {
     return parseInt(await this.client.get("FailedCount") || '0')
   }
 
-  public async getFailCount(ip: string){
-    return parseInt(await this.client.get("ip") || '-1')
-  }
-
-  public async setFailCount(ip: string){
-    const failedCount = await this.client.get("ip")
-    if (failedCount !== null){
-      this.client.incr("ip")
-    }
-  }
 }

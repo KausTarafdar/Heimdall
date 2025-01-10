@@ -4,8 +4,8 @@ import Monitor from '../../services/Monitor';
 const monitor = new Monitor()
 
 export async function submitHandler(req: Request, res: Response) {
-    const ip = req.body.ip
-    console.log(ip)
+    const ip = req.ip || 'undefined'
+
     const { headers } = req;
 
     const isValid = true ? headers['access-token'] === "access-provided": false;

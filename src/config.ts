@@ -21,7 +21,7 @@ export const config = {
   },
   email_credentials: {
     from_email: "dranzerstar@gmail.com",
-    to_email: "tataf92710@suggets.com"
+    to_email: "rabywady@polkaroad.net"
   },
   server: {
     port: process.env.PORT || 3000

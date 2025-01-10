@@ -15,39 +15,72 @@ export default class Monitor {
     }
 
     public async HandleFailedRequests(ip: string, reason: string) {
+        const redisKey = "metrics:failed_requests";
+
         const failedRequestDoc = await FailedRequestModel.create({ ip, reason });
 
         await failedRequestDoc.save()
         this.redis.FailedRequestCounterIncrement()
 
-        const previousFailedRequests = await this.getPreviousFailedRequest(ip)
+        await this.redis.client.del(redisKey);
 
-        if (previousFailedRequests >= this.THRESHOLD){
-            // sendAlert(ip).catch((err)=> {console.error("Error in sending email", err)})
+        // const previousFailedRequests = await this.getFailCount(ip)
+
+        const currIpFailCount = await this.getFailCount(ip)
+
+        if (currIpFailCount >= this.THRESHOLD && currIpFailCount % 5 == 0){
             emailQueue.add({
                 "ip": ip,
                 "reason": reason
             })
             console.log("Sent email")
-            await this.redis.addIpAlertTime(ip)
+            // await this.redis.addIpAlertTime(ip)
+            await this.redis.setFailCount(ip)
         }
     }
 
-    private async getPreviousFailedRequest(ip: string): Promise<number> {
-        const now = new Date();
+    // private async getPreviousFailedRequest(ip: string): Promise<number> {
+    //     const now = new Date();
 
-        const currWindowStart = now.getTime() - this.WINDOW
+    //     const currWindowStart = now.getTime() - this.WINDOW
 
-        // For Email cool down period of 5 mins
-        const lastAlertTime = await this.redis.getLastAlertForIp(ip) + 5 * 60 * 1000
+    //     // Previous alert sent at
+    //     const lastAlertTime = await this.redis.getLastAlertForIp(ip)
 
-        if (lastAlertTime === -1 || currWindowStart >= lastAlertTime) {
-            const failedCount = await FailedRequestModel.countDocuments({
+    //     // If first alert or previous alert before current window starting
+    //     if (lastAlertTime === -1 || currWindowStart >= lastAlertTime) {
+    //         const failedCount = await FailedRequestModel.countDocuments({
+    //             ip: ip,
+    //             createdAt: { $gt: new Date(currWindowStart) }
+    //         });
+    //         return failedCount
+    //     }
+    //     // Else send alert every 5 failures
+    //     else {
+    //         const failedCount = await FailedRequestModel.countDocuments({
+    //             ip: ip,
+    //             createdAt: { $gt: new Date(lastAlertTime) }
+    //         });
+    //         return failedCount
+    //     }
+    //     return -1
+    // }
+
+    private async getFailCount(ip: string){
+        const failCount = await this.redis.getFailCount(ip)
+
+        if (failCount === -1) {
+            const now = new Date()
+            const currWindowStart = now.getTime() - this.WINDOW
+
+            const failCount = await FailedRequestModel.countDocuments({
                 ip: ip,
                 createdAt: { $gt: new Date(currWindowStart) }
             });
-            return failedCount
+            return failCount
         }
-        return -1
+        else {
+            return failCount
+        }
     }
 }

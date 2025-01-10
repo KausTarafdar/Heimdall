@@ -32,7 +32,11 @@ emailQueue.process(async (job)=> {
     Threshold breached for IP: ${job.data.ip} over the course of the last 10 mins\n`,
   };
 
-  await transporter.sendMail(mailOptions)
+  try {
+    await transporter.sendMail(mailOptions)
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 export default emailQueue

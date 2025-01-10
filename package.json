@@ -18,7 +18,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
     "start:dev": "nodemon src/index.ts",
-    "db:reset": "bun run src/dropDB.ts"
+    "db:reset": "bun run src/dropDB.ts",
+    "start:prod": "npm run build && node dist/index.js"
   },
   "dependencies": {
     "@types/bull": "^3.15.9",

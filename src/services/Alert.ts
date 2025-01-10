@@ -1,19 +1,15 @@
 import nodemailer from 'nodemailer';
+import { config } from '../config';
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const transporter = nodemailer.createTransport(config.smtp);
 
 export async function sendAlert(ip: string){
   const mailOptions = {
-    from: process.env.SMTP_USER,
-    to: process.env.ALERT_EMAIL,
+    from: config.email_credentials.from_email,
+    to: config.email_credentials.to_email,
     subject: "Alert: Multiple Failed Requests Detected",
-    text: `Threshold breached for IP: ${ip}`,
+    text: `System alert from monitoring system in charge\n
+    Threshold breached for IP: ${ip} over the course of the last 10 mins\n`,
   };
 
   try {
